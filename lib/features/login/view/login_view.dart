@@ -1,145 +1,130 @@
-import 'package:chat_app/features/login/provider/login_provider.dart';
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:productapp/features/login/cubit/login_cubit.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final p = context.read<LoginProvider>();
+    var cubit = context.read<LoginCubit>();
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("User Login")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: p.formKey,
-          child: Column(
-            children: [
-              _gender(),
-              _field(
-                controller: p.nameCtrl,
-                label: "Full Name",
-                icon: Icons.person,
-                validator: (v) => v!.isEmpty ? "Enter name" : null,
-              ),
-              _field(
-                controller: p.phoneCtrl,
-                label: "Phone Number",
-                icon: Icons.phone,
-                maxLen: 10,
-                keyboard: TextInputType.phone,
-                validator: (v) =>
-                    v!.length < 10 ? "Invalid phone number" : null,
-              ),
-              _field(
-                controller: p.emailCtrl,
-                label: "Email",
-                icon: Icons.email,
-                keyboard: TextInputType.emailAddress,
-                validator: (v) => !v!.contains("@") ? "Invalid email" : null,
-              ),
-              _field(
-                controller: p.passwordCtrl,
-                label: "Password",
-                icon: Icons.lock,
-                obscure: true,
-                validator: (v) => v!.length < 6 ? "Min 6 characters" : null,
-              ),
-              _field(
-                controller: p.addressCtrl,
-                label: "Address",
-                icon: Icons.location_on,
-                maxLines: 2,
-                validator: (v) => v!.isEmpty ? "Enter address" : null,
-              ),
-              const SizedBox(height: 20),
-              _signup(context, p),
-              const SizedBox(height: 20),
-              _login(context, p),
-            ],
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Form(
+            key: cubit.formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 60),
+                Text(
+                  "Welcome Back 👋",
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Enter your EmailID and Password to continue",
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Column(
+                  children: [
+                    _field(
+                      context: context,
+                      controller: cubit.emailIdCon,
+                      label: "Email Address",
+                      icon: Icons.email_outlined,
+                      keyboard: TextInputType.emailAddress,
+                      validator: (v) =>
+                          RegExp(
+                            r'^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$',
+                          ).hasMatch(v ?? '')
+                          ? null
+                          : "Invalid email",
+                    ),
+                    _field(
+                      context: context,
+                      controller: cubit.passwordCon,
+                      label: "Password",
+                      icon: Icons.password_outlined,
+                      keyboard: TextInputType.visiblePassword,
+                      validator: (v) =>
+                          (v ?? '').length < 6 ? "Password must be >6" : null,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: cubit.onContinue,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      textStyle: theme.textTheme.labelLarge,
+                    ),
+                    child: const Text("Continue"),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: Text(
+                    "By continuing, you agree to our Terms & Privacy Policy",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onBackground.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _gender() {
-    return Selector<LoginProvider, String?>(
-      selector: (_, p) => p.gender,
-      builder: (context, gender, _) {
-        final p = context.read<LoginProvider>();
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: DropdownButtonFormField<String>(
-            value: gender,
-            decoration: InputDecoration(
-              labelText: "Gender",
-              prefixIcon: const Icon(Icons.people),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            items: const [
-              DropdownMenuItem(value: "Male", child: Text("Male")),
-              DropdownMenuItem(value: "Female", child: Text("Female")),
-            ],
-            onChanged: p.setGender,
-            validator: (v) => v == null ? "Select gender" : null,
-          ),
-        );
-      },
-    );
-  }
-
   Widget _field({
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     required IconData icon,
     TextInputType keyboard = TextInputType.text,
-    bool obscure = false,
     int maxLines = 1,
-    int? maxLen,
     String? Function(String?)? validator,
   }) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboard,
-        obscureText: obscure,
         maxLines: maxLines,
-        maxLength: maxLen,
         validator: validator,
-
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurface,
+        ),
         decoration: InputDecoration(
           labelText: label,
-          counterText: '',
-          prefixIcon: Icon(icon),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          labelStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
+          ),
+          prefixIcon: Icon(icon, color: theme.colorScheme.primary),
+          filled: true,
+          fillColor: theme.inputDecorationTheme.fillColor,
+          border: theme.inputDecorationTheme.border,
         ),
-      ),
-    );
-  }
-
-  Widget _signup(BuildContext context, LoginProvider p) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: () => p.singup(context),
-        child: const Text("SIGNUP"),
-      ),
-    );
-  }
-
-  Widget _login(BuildContext context, LoginProvider p) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: () => p.login(context),
-        child: const Text("LOGIN"),
       ),
     );
   }

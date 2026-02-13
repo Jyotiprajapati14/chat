@@ -1,6 +1,6 @@
 {
-    "name": "chat_app",
-    "short_name": "chat_app",
+    "name": "productapp",
+    "short_name": "productapp",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

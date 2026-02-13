@@ -1,77 +1,62 @@
-import 'package:chat_app/app/app_data.dart';
-import 'package:chat_app/features/chat/provider/chat_provider.dart';
-import 'package:chat_app/features/chat/view/chat_view.dart';
-import 'package:chat_app/features/dash/provider/dash_provider.dart';
-import 'package:chat_app/features/dash/view/dash_view.dart';
-import 'package:chat_app/features/login/model/user_mdl.dart';
-import 'package:chat_app/features/login/provider/login_provider.dart';
-import 'package:chat_app/features/login/view/login_view.dart';
-import 'package:chat_app/route/route_name.dart';
-import 'package:chat_app/utils/msg.dart';
+import 'package:adept_log/view/adept_log.dart';
 import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:productapp/features/login/cubit/login_cubit.dart';
+import 'package:productapp/features/login/view/login_view.dart';
+import 'package:productapp/features/product_details.dart/cubit/product_details_cubit.dart';
+import 'package:productapp/features/product_details.dart/view/product_details_view.dart';
+import 'package:productapp/features/product_list/cubit/product_list_cubit.dart';
+import 'package:productapp/features/product_list/model/product_mdl.dart';
+import 'package:productapp/features/product_list/view/product_list_view.dart';
+import 'package:productapp/features/splash/repo/splash_repo.dart';
+import 'package:productapp/features/splash/view/splash_view.dart';
+import 'package:productapp/route/route_name.dart';
 
 class Routes {
-  static PageRouteBuilder rightToLeftSlide({
-    required RouteSettings settings,
-    required Widget builder,
-  }) {
-    return PageRouteBuilder(
-      settings: settings,
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) => builder,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(1.0, 0.0);
-        const end = Offset.zero;
-        const curve = Curves.easeInOut;
-
-        final tween = Tween(
-          begin: begin,
-          end: end,
-        ).chain(CurveTween(curve: curve));
-        final offsetAnimation = animation.drive(tween);
-        return SlideTransition(position: offsetAnimation, child: child);
-      },
-    );
-  }
-
   static Route? onGenerateRoute(RouteSettings settings) {
-    logInfo('Route', msg: '${settings.name}');
+    AdeptLog.i(
+      'Route: ${settings.name}'
+      '${settings.arguments != null ? ' | Args: ${settings.arguments}' : ''}',
+      tag: 'Route',
+    );
     switch (settings.name) {
+      case RouteName.splash:
+        return PageRouteBuilder(
+          settings: RouteSettings(name: settings.name),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              RepositoryProvider(
+                create: (context) => SplashRepo(context),
+                child: SplashView(),
+              ),
+        );
       case RouteName.login:
         return PageRouteBuilder(
           settings: RouteSettings(name: settings.name),
           pageBuilder: (context, animation, secondaryAnimation) =>
-              ChangeNotifierProvider(
-                lazy: false,
-                create: (context) => LoginProvider(),
-                child: const LoginView(),
+              RepositoryProvider(
+                create: (context) => LoginCubit(context),
+                child: LoginView(),
               ),
         );
-
-      case RouteName.dash:
+      case RouteName.productList:
         return PageRouteBuilder(
           settings: RouteSettings(name: settings.name),
           pageBuilder: (context, animation, secondaryAnimation) =>
-              ChangeNotifierProvider(
-                lazy: false,
-                create: (context) => DashProvider(),
-                child: const DashView(),
+              RepositoryProvider(
+                create: (context) => ProductListCubit(context),
+                child: ProductListView(),
               ),
         );
-
-      case RouteName.chat:
+      case RouteName.productDetail:
         return PageRouteBuilder(
           settings: RouteSettings(name: settings.name),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              ChangeNotifierProvider(
-                lazy: false,
-                create: (context) => ChatProvider(
-                  fromUser: AppData.inst.userMdl,
-                  toUser: settings.arguments as UserMdl,
-                ),
-                child: const ChatView(),
-              ),
+          pageBuilder: (context, animation, secondaryAnimation) => BlocProvider(
+            create: (context) => ProductDetailsCubit(
+              context: context,
+              productMdl: settings.arguments as ProductMdl,
+            ),
+            child: ProductDetailsView(),
+          ),
         );
     }
     return null;

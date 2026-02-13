@@ -1,6 +1,7 @@
-import 'package:chat_app/features/login/model/user_mdl.dart';
+import 'package:productapp/common/model/credentials_mdl.dart';
 
 class AppData {
-  static final AppData inst = AppData();
-  UserMdl userMdl = UserMdl.fromJson({});
+  AppData._();
+  static String apiBaseUrl = 'https://dummyjson.com/';
+  static CredentialsMdl credentialsMdl = CredentialsMdl();
 }
